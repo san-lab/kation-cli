@@ -51,8 +51,12 @@ func main() {
 		for i := 3; i < len(os.Args); i++ {
 			constructorArgs = append(constructorArgs, os.Args[i])
 		}
-		cli.CompileAndDeploy(rpcUrl, accName, keysPath, keysPass, contractPath, defaultGas, constructorArgs)
-
+		err := cli.CompileAndDeploy(rpcUrl, accName, keysPath, keysPass, contractPath, defaultGas, constructorArgs)
+	        if err != nil {
+                        fmt.Println(err)
+                	return
+		}
+	
 	case "i":
 		if len(os.Args) < 5 {
                         fmt.Printf("Usage: %s i [contractPath] [contractAddress] [methodName] [args...]\n", os.Args[0])
@@ -66,7 +70,11 @@ func main() {
                 for i := 5; i < len(os.Args); i++ {
                         inputArgs = append(inputArgs, os.Args[i])
                 }
-		cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, contractPath, defaultGas, defaultAmount, contractAddress, funName, inputArgs)
+		err := cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, contractPath, defaultGas, defaultAmount, contractAddress, funName, inputArgs)
+        	if err != nil {
+                	fmt.Println(err)
+			return
+        	}
 
 	case "p":
                 if len(os.Args) < 10 {
@@ -86,22 +94,40 @@ func main() {
 		// "Register" chain
 		inputArgs := []string{chainId, validators, previousBlockHash, ethStorageContractAddress}
 		fmt.Println(inputArgs)
-		cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, cliqueContractPath, defaultGas, defaultAmount, cliqueContractAddress, funCliqueRegisterChain, inputArgs)
-
+		err := cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, cliqueContractPath, defaultGas, defaultAmount, cliqueContractAddress, funCliqueRegisterChain, inputArgs)
+	        if err != nil {
+                        fmt.Println("Register chain", err)
+			return
+                }
 		// Submit block
-		rlpUnsignedHeader, rlpSignedHeader := cli.GetRlpHeaders(rpcUrlClique, blockHash)
+		rlpUnsignedHeader, rlpSignedHeader, err := cli.GetRlpHeaders(rpcUrlClique, blockHash)
+		if err != nil {
+                        fmt.Println("GetRlpHeaders", err)
+                        return
+                }
 		inputArgs = []string{chainId, rlpUnsignedHeader, rlpSignedHeader, ethStorageContractAddress}
 		fmt.Println(inputArgs)
-		cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, cliqueContractPath, defaultGas, defaultAmount, cliqueContractAddress, funCliqueSubmitBlock, inputArgs)
-
+		err = cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, cliqueContractPath, defaultGas, defaultAmount, cliqueContractAddress, funCliqueSubmitBlock, inputArgs)
+                if err != nil {
+                        fmt.Println("Submit block", err)
+                	return
+		}
 		// Submit proof
-                proof := cli.GetProof(rpcUrlClique, transactionHash)
+                proof, err := cli.GetProof(rpcUrlClique, transactionHash)
+		if err != nil {
+                        fmt.Println("GetProof", err)
+                        return
+                }
 		inputArgs = []string{chainId, blockHash, contractEmittedAddress, proof}
 		for i := 10; i < len(os.Args); i++ {
                         inputArgs = append(inputArgs, os.Args[i])
                 }
 		fmt.Println(inputArgs)
-		cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, contractPath, defaultGas, defaultAmount, contractAddress, funName, inputArgs)
+		err = cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, contractPath, defaultGas, defaultAmount, contractAddress, funName, inputArgs)
+	        if err != nil {
+                        fmt.Println("Submit proof", err)
+               		return
+		 }
 	default:
 		fmt.Println("Wrong parameters")
 	}

@@ -30,27 +30,49 @@ var ethClient *EthClient = nil
 var accounts map[string]*config.Account = make(map[string]*config.Account)
 var contracts map[string]*contract.ContractInstance = make(map[string]*contract.ContractInstance)
 
-func CompileAndDeploy(rpcUrl string, accName string, keysPath string, keysPass string, contractPath string, defaultGas string, constructorArgs []string) {
-	connectToClient(rpcUrl)
-	addAccount(accName, keysPath, keysPass)
-	compileContract(defaultContractName, contractPath, contracts)
+func CompileAndDeploy(rpcUrl string, accName string, keysPath string, keysPass string, contractPath string, defaultGas string, constructorArgs []string) error {
+	err := connectToClient(rpcUrl)
+	if err != nil {
+                return err
+        }
+	err = addAccount(accName, keysPath, keysPass)
+	if err != nil {
+                return err
+        }
+	err = compileContract(defaultContractName, contractPath, contracts)
+	if err != nil {
+                return err
+        }
 	deployContract(constructorArgs, defaultContractName, accName, defaultGas)
+	return nil
 }
 
 func InteractWithContract(rpcUrl string, accName string, keysPath string, keysPass string, contractPath string, defaultGas string, defaultAmount string, contractAddress string, funName string, inputArgs []string) error {
-	connectToClient(rpcUrl)
-	addAccount(accName, keysPath, keysPass)
-	compileContract(defaultContractName, contractPath, contracts)
+	err := connectToClient(rpcUrl)
+	if err != nil {
+                return err
+        }
+	err = addAccount(accName, keysPath, keysPass)
+        if err != nil {
+                return err
+        }
+	err = compileContract(defaultContractName, contractPath, contracts)
+        if err != nil {
+                return err
+        }
 	transactionMessage(inputArgs, defaultContractName, funName, accName, contractAddress, defaultAmount, defaultGas)
 	return nil
 }
 
-func GetRlpHeaders(rpcUrl string, blockHash string) (string, string) {
-	connectToClient(rpcUrl)
+func GetRlpHeaders(rpcUrl string, blockHash string) (string, string, error) {
+	err := connectToClient(rpcUrl)
+        if err != nil {
+                return "", "" , err
+        }
 	block, _, err := getBlockByHash(ethClient, blockHash)
 	if err != nil {
 		fmt.Println("Rlp headers error")
-		return "", ""
+		return "", "", err
 	}
 	_signedBlock, _unsignedBlock := RlpEncodeClique(block)
 	//signedBlock := string(_signedBlock)
@@ -59,46 +81,54 @@ func GetRlpHeaders(rpcUrl string, blockHash string) (string, string) {
         //unsignedBlock = "0x" + unsignedBlock
 	unsignedBlock := fmt.Sprintf("0x%x", _unsignedBlock)
 	signedBlock := fmt.Sprintf("0x%x", _signedBlock)
-	return unsignedBlock, signedBlock
+	return unsignedBlock, signedBlock, nil
 }
 
 
-func GetProof(rpcUrl string, transactionHash string) string {
-        connectToClient(rpcUrl)
+func GetProof(rpcUrl string, transactionHash string) (string, error) {
+        err := connectToClient(rpcUrl)
+        if err != nil {
+                return "", err
+        }
+
 	_proof := getProof(ethClient, transactionHash)
 	proof := fmt.Sprintf("0x%x", _proof)
-	return proof
+	return proof, nil
 }
 
-func connectToClient(url string) {
+func connectToClient(url string) error {
 	client, err := getClient(url)
 	if err != nil {
 		fmt.Println("Could not connect to client.\n")
-		return
+		return err
 	}
 	ethClient = client
+	return nil
 }
 
-func addAccount(name string, path string, pass string) {
+func addAccount(name string, path string, pass string) error {
 	auth, key, err := config.InitUser(path, pass)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
 	account := &config.Account{Auth: auth, Key: key}
 	accounts[name] = account
 	fmt.Println("Account added succesfully.")
+	return nil
 }
 
-func compileContract(contractName string, pathToContract string, contracts map[string]*contract.ContractInstance) {
+func compileContract(contractName string, pathToContract string, contracts map[string]*contract.ContractInstance) error {
 	err := addContractInstance(pathToContract, contractName, contracts)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return err
 	}
 	fmt.Println("Added!")
+	return nil
 }
 
+//TODO error checking
 func deployContract(constructorArgs []string, contractName string, accountName string, customGasLimit string) {
 		contractInstance := contracts[contractName]
 		if contractInstance == nil {
