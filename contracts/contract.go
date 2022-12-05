@@ -171,37 +171,37 @@ func TransactionContract(
 	args ...interface{},
 ) (*types.Transaction, error) {
 
-	fmt.Print("Marshalling ABI\n")
+	//fmt.Print("Marshalling ABI\n")
 	abiStr, err := json.Marshal(contract.Info.AbiDefinition)
 	if err != nil {
 		errStr := fmt.Sprintf("ERROR marshalling abi to string: %s\n", err)
 		return nil, errors.New(errStr)
 	}
 
-	fmt.Print("JSONify ABI\n")
+	//fmt.Print("JSONify ABI\n")
 	abiContract, err := abi.JSON(strings.NewReader(string(abiStr)))
 	if err != nil {
 		errStr := fmt.Sprintf("ERROR reading contract ABI: %s\n", err)
 		return nil, errors.New(errStr)
 	}
 
-	fmt.Print("Packing Args to ABI\n")
+	//fmt.Print("Packing Args to ABI\n")
 	payload, err := abiContract.Pack(methodName, args...)
 	if err != nil {
 		errStr := fmt.Sprintf("ERROR packing the method name for the contract call: %s\n", err)
 		return nil, errors.New(errStr)
 	}
 
-	fmt.Print("Retrieving public key\n")
+	//fmt.Print("Retrieving public key\n")
 	from := crypto.PubkeyToAddress(userKey.PublicKey)
 
-	fmt.Print("Creating transaction\n")
+	//fmt.Print("Creating transaction\n")
 	tx := newTx(ctx, backend, &from, &to, amount, gasLimit, payload)
 
-	fmt.Print("Signing transaction\n")
+	//fmt.Print("Signing transaction\n")
 	signedTx := signTx(tx, userKey)
 
-	fmt.Print("SENDING TRANSACTION\n")
+	//fmt.Print("Sending transaction\n")
 
 	err = backend.SendTransaction(ctx, signedTx)
 	if err != nil {

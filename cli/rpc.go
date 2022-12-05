@@ -110,7 +110,7 @@ func getProof(eth *EthClient, transactionHash string) []byte {
 	//            "ReceiptValue:   0x%x\n" +
 	//            "ReceiptNodes:   0x%x\n", txPath, txValue, txNodes, receiptValue, receiptNodes)
 
-	fmt.Printf("Proof: 0x%x\n", proof)
+	//fmt.Printf("Proof: 0x%x\n", proof)
 	return proof
 }
 

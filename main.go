@@ -24,16 +24,6 @@ var ethStorageContractAddress = "0x0E2D1eF3088d95777b3f59f3E0181a048C4E52CE"
 
 var validators = "0x581d470ed7fa33c4b56f2785b2d7af470f6b127e"
 
-//var ethStoreAddress = "0x0E2D1eF3088d95777b3f59f3E0181a048C4E52CE"
-//var verifierAddress = "0xA421D33ddB85150419f0f6E5d55B9DB2f40957D2"
-
-//var inputArgs = []string{}
-//var inputArgs = []string{"15"}
-
-//var constructorArgs = []string{}
-//var constructorArgs = []string{ethStoreAddress, verifierAddress}
-
-
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: %s [d/i/p] [parameters...]\n", os.Args[0])
@@ -56,7 +46,7 @@ func main() {
                         fmt.Println(err)
                 	return
 		}
-	
+
 	case "i":
 		if len(os.Args) < 5 {
                         fmt.Printf("Usage: %s i [contractPath] [contractAddress] [methodName] [args...]\n", os.Args[0])
@@ -93,12 +83,16 @@ func main() {
 
 		// "Register" chain
 		inputArgs := []string{chainId, validators, previousBlockHash, ethStorageContractAddress}
-		fmt.Println(inputArgs)
+		// fmt.Println(inputArgs)
+		fmt.Println("\n--------------------------------------------------------------------------------")
+		fmt.Println("\"REGISTERING\" PARENT BLOCK IN", rpcUrl, "CHAIN")
+		fmt.Println("--------------------------------------------------------------------------------")
 		err := cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, cliqueContractPath, defaultGas, defaultAmount, cliqueContractAddress, funCliqueRegisterChain, inputArgs)
 	        if err != nil {
                         fmt.Println("Register chain", err)
 			return
                 }
+
 		// Submit block
 		rlpUnsignedHeader, rlpSignedHeader, err := cli.GetRlpHeaders(rpcUrlClique, blockHash)
 		if err != nil {
@@ -106,12 +100,16 @@ func main() {
                         return
                 }
 		inputArgs = []string{chainId, rlpUnsignedHeader, rlpSignedHeader, ethStorageContractAddress}
-		fmt.Println(inputArgs)
+		// fmt.Println(inputArgs)
+		fmt.Println("\n--------------------------------------------------------------------------------")
+                fmt.Println("SUBMITTING BLOCK FROM", rpcUrlClique, "TO", rpcUrl, "CHAIN")
+                fmt.Println("--------------------------------------------------------------------------------")
 		err = cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, cliqueContractPath, defaultGas, defaultAmount, cliqueContractAddress, funCliqueSubmitBlock, inputArgs)
                 if err != nil {
                         fmt.Println("Submit block", err)
-                	return
+			return
 		}
+
 		// Submit proof
                 proof, err := cli.GetProof(rpcUrlClique, transactionHash)
 		if err != nil {
@@ -119,10 +117,14 @@ func main() {
                         return
                 }
 		inputArgs = []string{chainId, blockHash, contractEmittedAddress, proof}
+		// Extra arguments if any
 		for i := 10; i < len(os.Args); i++ {
                         inputArgs = append(inputArgs, os.Args[i])
                 }
-		fmt.Println(inputArgs)
+		//fmt.Println(inputArgs)
+		fmt.Println("\n--------------------------------------------------------------------------------")
+                fmt.Println("SUBMITTING PROOF OF TRANSACTION", transactionHash, "FROM", rpcUrlClique, "TO", rpcUrl, "CHAIN")
+                fmt.Println("--------------------------------------------------------------------------------")
 		err = cli.InteractWithContract(rpcUrl, accName, keysPath, keysPass, contractPath, defaultGas, defaultAmount, contractAddress, funName, inputArgs)
 	        if err != nil {
                         fmt.Println("Submit proof", err)

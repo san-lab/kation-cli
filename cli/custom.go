@@ -48,6 +48,7 @@ func CompileAndDeploy(rpcUrl string, accName string, keysPath string, keysPass s
 }
 
 func InteractWithContract(rpcUrl string, accName string, keysPath string, keysPass string, contractPath string, defaultGas string, defaultAmount string, contractAddress string, funName string, inputArgs []string) error {
+	fmt.Println("Calling method", funName, "of contract", contractPath, "at address", contractAddress)
 	err := connectToClient(rpcUrl)
 	if err != nil {
                 return err
@@ -75,10 +76,6 @@ func GetRlpHeaders(rpcUrl string, blockHash string) (string, string, error) {
 		return "", "", err
 	}
 	_signedBlock, _unsignedBlock := RlpEncodeClique(block)
-	//signedBlock := string(_signedBlock)
-	//signedBlock = "0x" + signedBlock
-        //unsignedBlock := string(_unsignedBlock)
-        //unsignedBlock = "0x" + unsignedBlock
 	unsignedBlock := fmt.Sprintf("0x%x", _unsignedBlock)
 	signedBlock := fmt.Sprintf("0x%x", _signedBlock)
 	return unsignedBlock, signedBlock, nil
@@ -90,7 +87,6 @@ func GetProof(rpcUrl string, transactionHash string) (string, error) {
         if err != nil {
                 return "", err
         }
-
 	_proof := getProof(ethClient, transactionHash)
 	proof := fmt.Sprintf("0x%x", _proof)
 	return proof, nil
@@ -114,7 +110,6 @@ func addAccount(name string, path string, pass string) error {
 	}
 	account := &config.Account{Auth: auth, Key: key}
 	accounts[name] = account
-	fmt.Println("Account added succesfully.")
 	return nil
 }
 
@@ -124,7 +119,6 @@ func compileContract(contractName string, pathToContract string, contracts map[s
 		fmt.Println(err)
 		return err
 	}
-	fmt.Println("Added!")
 	return nil
 }
 
@@ -153,14 +147,10 @@ func deployContract(constructorArgs []string, contractName string, accountName s
 		}
 
 		constructorInputs, err := customParseMethodParameters(constructorArgs, contractInstance.Abi, "")
-		//var constructorInputs []interface{}
-		// Need to figure out the format we need for the constructor arguments
-		// Empty array should be fine for verifier contract
 		if err != nil {
 			fmt.Printf("Error parsing constructor parameters: %s\n", err)
 			return
 		}
-
 
 		payload := contract.CompilePayload(binStr, abiStr, constructorInputs...)
 
@@ -188,7 +178,6 @@ func deployContract(constructorArgs []string, contractName string, accountName s
 
 
 func transactionMessage(inputArguments []string, contractName string, functionName string, accountName string, contractAddress string, amountString string, gasLimitString string) {
-
 	instance := contracts[contractName]
 	methodName := functionName
 	account := accounts[accountName]
@@ -223,9 +212,9 @@ func transactionMessage(inputArguments []string, contractName string, functionNa
 		fmt.Printf("Error parsing parameters: %s\n", err)
 		return
 	}
-	for i := 0; i < len(inputs); i++ {
-		fmt.Printf("%v", inputs[i])
-	}
+	//for i := 0; i < len(inputs); i++ {
+	//	fmt.Printf("%v", inputs[i])
+	//}
 
 	tx, err := contract.TransactionContract(
 		ctx,
@@ -276,7 +265,7 @@ func customParseMethodParameters(argsArray []string, abiStruct *abi.ABI, methodN
 		// Many annoying cases of byte arrays
 
 		if argument.Type.Kind == reflect.Array || argument.Type.Kind == reflect.Slice {
-			fmt.Println("Argument is array\n")
+			//fmt.Println("Argument is array\n")
 
 			// One dimensional byte array
 			// Accepts all byte arrays as hex string with pre-pended '0x' only

@@ -478,7 +478,7 @@ func addContractInstance(pathToContract string, contractName string, contracts m
 	if err != nil {
 		return err
 	}
-	fmt.Println("Creating contract instance...")
+	//fmt.Println("Creating contract instance...")
 	contracts[contractName] = &contract.ContractInstance{Contract: compiledContract, Abi: &abistruct, Path: pathToContract}
 	return nil
 }
